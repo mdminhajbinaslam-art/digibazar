@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>DigiBazar Seller</title>
+
+<style>
+body{
+  font-family:Arial;
+  background:#f2f2f2;
+  text-align:center;
+}
+
+.box{
+  background:white;
+  padding:20px;
+  margin:20px;
+  border-radius:10px;
+}
+
+input{
+  width:90%;
+  padding:10px;
+  margin:10px 0;
+}
+
+button{
+  background:green;
+  color:white;
+  border:none;
+  padding:10px;
+  width:95%;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Seller Panel - DigiBazar</h2>
+
+<div class="box">
+  <input type="text" id="name" placeholder="পণ্যের নাম">
+  <input type="text" id="price" placeholder="দাম">
+  <input type="text" id="img" placeholder="ছবির লিংক">
+
+  <button onclick="addProduct()">পণ্য যোগ করুন</button>
+</div>
+
+<div id="list"></div>
+
+<script>
+function addProduct(){
+  let name = document.getElementById("name").value;
+  let price = document.getElementById("price").value;
+  let img = document.getElementById("img").value;
+
+  let box = `
+    <div style="background:white;margin:10px;padding:10px;border-radius:10px">
+      <img src="${img}" width="100%">
+      <h3>${name}</h3>
+      <p>৳ ${price}</p>
+    </div>
+  `;
+
+  document.getElementById("list").innerHTML += box;
+}
+</script>
+
+</body>
+</html>
