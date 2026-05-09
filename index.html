@@ -164,3 +164,35 @@ function buy(){
 <div id="cartList"></div>
 
 <h3 id="totalPrice">Total: ৳0</h3>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "আপনার apiKey",
+    authDomain: "digibazar-48743.firebaseapp.com",
+    projectId: "digibazar-48743",
+    storageBucket: "digibazar-48743.appspot.com",
+    messagingSenderId: "295224613021",
+    appId: "আপনার appId"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // 🛒 Product add function
+  async function addProduct() {
+    const name = document.getElementById("name").value;
+    const price = document.getElementById("price").value;
+
+    await addDoc(collection(db, "products"), {
+      name: name,
+      price: price,
+      time: Date.now()
+    });
+
+    alert("Product Added ✔");
+  }
+
+  window.addProduct = addProduct;
+</script>
