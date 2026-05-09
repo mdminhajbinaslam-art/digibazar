@@ -36,3 +36,50 @@ function buy(){
 
 // page load হলে দেখাবে
 showProducts();
+let products = JSON.parse(localStorage.getItem("products")) || [];
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+function addToCart(name, price){
+  cart.push({name, price});
+  localStorage.setItem("cart", JSON.stringify(cart));
+  showCart();
+}
+
+function showCart(){
+  let cartList = document.getElementById("cartList");
+  let total = 0;
+
+  cartList.innerHTML = "";
+
+  cart.forEach((item, index) => {
+    total += Number(item.price);
+
+    cartList.innerHTML += `
+      <div style="border:1px solid gray; padding:10px; margin:5px;">
+        <h4>${item.name}</h4>
+        <p>৳ ${item.price}</p>
+      </div>
+    `;
+  });
+
+  document.getElementById("totalPrice").innerText = "Total: ৳" + total;
+}
+
+function showProducts(){
+  let list = document.getElementById("productList");
+  list.innerHTML = "";
+
+  products.forEach((p) => {
+    list.innerHTML += `
+      <div style="border:1px solid gray; padding:10px; margin:5px;">
+        <h3>${p.name}</h3>
+        <p>৳ ${p.price}</p>
+        <button onclick="addToCart('${p.name}', '${p.price}')">কিনুন</button>
+      </div>
+    `;
+  });
+}
+
+// load
+showProducts();
+showCart();
