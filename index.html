@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>DigiBazar Fixed</title>
+  <title>DigiBazar Marketplace</title>
 </head>
 
 <body>
 
 <h1>🛒 DigiBazar</h1>
 
-<!-- AUTH -->
+<!-- 🔐 AUTH -->
 <div id="auth">
 
-<h2>Login / Register</h2>
+<h2>Register / Login</h2>
 
 <input id="email" placeholder="Email"><br><br>
 <input id="password" type="password" placeholder="Password"><br><br>
@@ -23,10 +23,10 @@
 
 </div>
 
-<!-- SHOP -->
+<!-- 🛍️ SHOP -->
 <div id="shop" style="display:none;">
 
-<h2>🛍️ Shop Area</h2>
+<h2>🛒 Shop</h2>
 
 <button onclick="logout()">Logout</button>
 
@@ -36,6 +36,7 @@
 
 <input id="name" placeholder="Product Name"><br><br>
 <input id="price" placeholder="Price"><br><br>
+<input id="category" placeholder="Category"><br><br>
 <input type="file" id="image"><br><br>
 
 <button onclick="addProduct()">Post Product</button>
@@ -44,6 +45,11 @@
 
 <h3>📦 Products</h3>
 <div id="productList"></div>
+
+<hr>
+
+<h3>🛒 Cart</h3>
+<button onclick="placeOrder()">Place Order</button>
 
 </div>
 
@@ -65,7 +71,14 @@ addDoc,
 getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// CONFIG
+import {
+getStorage,
+ref,
+uploadBytes,
+getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+// 🔥 CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyBFRzWWY0iTPnPtmT_io6NNmxvmE9SZPwE",
   authDomain: "digibazar-48743.firebaseapp.com",
@@ -75,11 +88,15 @@ const firebaseConfig = {
   appId: "1:295224613021:web:4c1b41da57cb240c165c74"
 };
 
+// INIT
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
-// REGISTER
+let cart = [];
+
+// 🔐 REGISTER
 window.register = function(){
 
 let email = emailInput();
@@ -87,13 +104,14 @@ let password = passInput();
 
 createUserWithEmailAndPassword(auth,email,password)
 .then(()=>{
-showShop();
+openShop();
+loadProducts();
 })
 .catch(e=>alert(e.message));
 
 }
 
-// LOGIN
+// 🔐 LOGIN
 window.login = function(){
 
 let email = emailInput();
@@ -101,36 +119,46 @@ let password = passInput();
 
 signInWithEmailAndPassword(auth,email,password)
 .then(()=>{
-showShop();
+openShop();
 loadProducts();
 })
 .catch(e=>alert(e.message));
 
 }
 
-// LOGOUT
+// 🚪 LOGOUT
 window.logout = function(){
 signOut(auth);
 document.getElementById("auth").style.display="block";
 document.getElementById("shop").style.display="none";
 }
 
-// ADD PRODUCT
+// ➕ ADD PRODUCT (IMAGE)
 window.addProduct = async function(){
 
 let name = document.getElementById("name").value;
 let price = document.getElementById("price").value;
+let category = document.getElementById("category").value;
+let file = document.getElementById("image").files[0];
+
+let imgRef = ref(storage,"products/"+file.name);
+
+await uploadBytes(imgRef,file);
+
+let imgUrl = await getDownloadURL(imgRef);
 
 await addDoc(collection(db,"products"),{
-name:name,
-price:price
+name,
+price,
+category,
+image: imgUrl
 });
 
 loadProducts();
 
 }
 
-// LOAD PRODUCTS
+// 📦 LOAD PRODUCTS
 window.loadProducts = async function(){
 
 const snap = await getDocs(collection(db,"products"));
@@ -142,14 +170,45 @@ let d = doc.data();
 
 html += `
 <div style="border:1px solid #ccc;padding:10px;margin:10px;">
-🛍️ ${d.name} <br>
-💰 ${d.price}
+<img src="${d.image}" width="120"><br>
+🛍️ ${d.name}<br>
+📂 ${d.category}<br>
+💰 ${d.price}<br><br>
+
+<button onclick="addToCart('${d.name}','${d.price}')">
+🛒 Add to Cart
+</button>
+
 </div>
 `;
-
 });
 
 document.getElementById("productList").innerHTML = html;
+
+}
+
+// 🛒 CART
+window.addToCart = function(name,price){
+cart.push({name,price});
+alert("Added to cart ✔");
+}
+
+// 💰 PLACE ORDER
+window.placeOrder = async function(){
+
+for(let item of cart){
+
+await addDoc(collection(db,"orders"),{
+product:item.name,
+price:item.price,
+email:auth.currentUser.email
+});
+
+}
+
+alert("Order placed ✔");
+
+cart = [];
 
 }
 
@@ -162,7 +221,7 @@ function passInput(){
 return document.getElementById("password").value;
 }
 
-function showShop(){
+function openShop(){
 document.getElementById("auth").style.display="none";
 document.getElementById("shop").style.display="block";
 }
