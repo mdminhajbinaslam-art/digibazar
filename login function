@@ -1,0 +1,5 @@
+.then((user)=>{
+  currentUser = user.user;
+  document.getElementById("status").innerText = "Login Success ✔";
+  showShop(); // 🔥 এটা যোগ করুন
+})

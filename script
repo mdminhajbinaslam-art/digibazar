@@ -158,3 +158,7 @@ function showCart(){
     document.getElementById("msg").innerText = "Product পোস্ট হয়েছে ✔";
   }
 </script>
+function showShop(){
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("shopPage").style.display = "block";
+}
