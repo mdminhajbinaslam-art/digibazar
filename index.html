@@ -8,7 +8,7 @@
 
 <h1>🛒 DigiBazar Multi-Vendor Marketplace</h1>
 
-<!-- 🔐 AUTH -->
+<!-- AUTH -->
 <div id="auth">
 
 <h2>Register / Login</h2>
@@ -21,7 +21,7 @@
 
 </div>
 
-<!-- 🛍️ SHOP -->
+<!-- SHOP -->
 <div id="shop" style="display:none;">
 
 <h2>🛒 Shop Panel</h2>
@@ -30,7 +30,7 @@
 
 <hr>
 
-<!-- 🔍 SEARCH -->
+<!-- SEARCH -->
 <input id="search" placeholder="Search product..." onkeyup="loadProducts()">
 <br><br>
 
@@ -72,6 +72,7 @@
 <h3>👨‍💼 Seller Dashboard</h3>
 
 <button onclick="loadMyProducts()">My Products</button>
+
 <div id="myProducts"></div>
 
 </div>
@@ -103,7 +104,7 @@ uploadBytes,
 getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-// 🔥 CONFIG
+// CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyBFRzWWY0iTPnPtmT_io6NNmxvmE9SZPwE",
   authDomain: "digibazar-48743.firebaseapp.com",
@@ -120,7 +121,7 @@ const storage = getStorage(app);
 
 let cart = [];
 
-// 🔐 REGISTER
+// REGISTER
 window.register = function(){
 
 createUserWithEmailAndPassword(auth,emailInput(),passInput())
@@ -133,7 +134,7 @@ loadOrders();
 
 }
 
-// 🔐 LOGIN
+// LOGIN
 window.login = function(){
 
 signInWithEmailAndPassword(auth,emailInput(),passInput())
@@ -146,14 +147,17 @@ loadOrders();
 
 }
 
-// 🚪 LOGOUT
+// LOGOUT
 window.logout = function(){
+
 signOut(auth);
+
 document.getElementById("auth").style.display="block";
 document.getElementById("shop").style.display="none";
+
 }
 
-// ➕ ADD PRODUCT (SELLER)
+// ADD PRODUCT
 window.addProduct = async function(){
 
 let name = document.getElementById("name").value;
@@ -172,14 +176,15 @@ name,
 price,
 category,
 image: imgUrl,
-seller: auth.currentUser.email
+seller: auth.currentUser.email,
+rating: 0
 });
 
 loadProducts();
 
 }
 
-// 📦 PRODUCTS + SEARCH
+// PRODUCTS
 window.loadProducts = async function(){
 
 const snap = await getDocs(collection(db,"products"));
@@ -189,21 +194,31 @@ search = search.toLowerCase();
 
 let html = "";
 
-snap.forEach(doc=>{
-let d = doc.data();
+snap.forEach(docItem=>{
+
+let d = docItem.data();
 
 if(d.name.toLowerCase().includes(search) || d.category.toLowerCase().includes(search)){
 
 html += `
 <div style="border:1px solid #ccc;padding:10px;margin:10px;">
+
 <img src="${d.image}" width="120"><br>
+
 🛍️ ${d.name}<br>
 📂 ${d.category}<br>
 💰 ${d.price}<br>
+⭐ Rating: ${d.rating}<br>
 👨‍💼 Seller: ${d.seller}<br><br>
 
 <button onclick="addToCart('${d.name}','${d.price}')">
 🛒 Add to Cart
+</button>
+
+<br><br>
+
+<button onclick="rateProduct('${docItem.id}',5)">
+⭐ Give 5 Star
 </button>
 
 </div>
@@ -217,13 +232,29 @@ document.getElementById("productList").innerHTML = html;
 
 }
 
-// 🛒 CART
-window.addToCart = function(name,price){
-cart.push({name,price});
-alert("Added ✔");
+// ⭐ RATE PRODUCT
+window.rateProduct = async function(id,rating){
+
+await updateDoc(doc(db,"products",id),{
+rating: rating
+});
+
+alert("Thanks for rating ⭐");
+
+loadProducts();
+
 }
 
-// 💳 ORDER + PAYMENT
+// CART
+window.addToCart = function(name,price){
+
+cart.push({name,price});
+
+alert("Added ✔");
+
+}
+
+// PLACE ORDER
 window.placeOrder = async function(){
 
 let method = document.getElementById("paymentMethod").value;
@@ -241,13 +272,14 @@ status:"Pending"
 }
 
 cart = [];
+
 alert("Order placed ✔");
 
 loadOrders();
 
 }
 
-// 📦 ORDER STATUS
+// LOAD ORDERS
 window.loadOrders = async function(){
 
 const snap = await getDocs(collection(db,"orders"));
@@ -255,6 +287,7 @@ const snap = await getDocs(collection(db,"orders"));
 let html = "";
 
 snap.forEach(d=>{
+
 let data = d.data();
 
 html += `
@@ -266,8 +299,13 @@ html += `
 📧 ${data.email}<br>
 📦 Status: <b>${data.status}</b><br><br>
 
-<button onclick="updateStatus('${d.id}','Processing')">Processing</button>
-<button onclick="updateStatus('${d.id}','Delivered')">Delivered</button>
+<button onclick="updateStatus('${d.id}','Processing')">
+Processing
+</button>
+
+<button onclick="updateStatus('${d.id}','Delivered')">
+Delivered
+</button>
 
 </div>
 `;
@@ -278,7 +316,7 @@ document.getElementById("orderList").innerHTML = html;
 
 }
 
-// 📦 UPDATE STATUS
+// UPDATE STATUS
 window.updateStatus = async function(id,status){
 
 await updateDoc(doc(db,"orders",id),{
@@ -289,25 +327,31 @@ loadOrders();
 
 }
 
-// 👨‍💼 SELLER DASHBOARD
+// SELLER DASHBOARD
 window.loadMyProducts = async function(){
 
 const snap = await getDocs(collection(db,"products"));
 
 let html = "";
 
-snap.forEach(doc=>{
-let d = doc.data();
+snap.forEach(docItem=>{
+
+let d = docItem.data();
 
 if(d.seller === auth.currentUser.email){
 
 html += `
 <div style="border:2px solid green;padding:10px;margin:10px;">
+
 <img src="${d.image}" width="120"><br>
+
 🛍️ ${d.name}<br>
 💰 ${d.price}<br>
 📂 ${d.category}<br>
+⭐ ${d.rating}<br>
+
 <b>My Product</b>
+
 </div>
 `;
 
@@ -319,7 +363,7 @@ document.getElementById("myProducts").innerHTML = html;
 
 }
 
-// 🔧 HELPERS
+// HELPERS
 function emailInput(){
 return document.getElementById("email").value;
 }
@@ -329,8 +373,10 @@ return document.getElementById("password").value;
 }
 
 function openShop(){
+
 document.getElementById("auth").style.display="none";
 document.getElementById("shop").style.display="block";
+
 }
 
 </script>
