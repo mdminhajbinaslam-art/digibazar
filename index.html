@@ -1,53 +1,26 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
-<head>
-  <title>DigiBazar</title>
-</head>
-
 <body>
 
-<h1>🛒 DigiBazar Marketplace</h1>
-
-<!-- 🔐 LOGIN -->
-<h2>Login / Register</h2>
+<h2>Firebase Login Test</h2>
 
 <input id="email" placeholder="Email"><br><br>
 <input id="password" type="password" placeholder="Password"><br><br>
 
 <button onclick="register()">Register</button>
-<button onclick="login()">Login</button>
 
-<p id="status"></p>
+<p id="msg"></p>
 
-<hr>
-
-<!-- 🛒 PRODUCT ADD -->
-<h2>Add Product</h2>
-
-<input id="name" placeholder="Product Name"><br><br>
-<input id="price" placeholder="Price"><br><br>
-
-<button onclick="addProduct()">Add Product</button>
-
-<hr>
-
-<!-- 🛍️ PRODUCT LIST -->
-<h2>Products</h2>
-<div id="productList"></div>
-
-<!-- 🔥 FIREBASE -->
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { 
-  getFirestore, collection, addDoc, getDocs 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-import { 
-  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword 
+import {
+getAuth,
+createUserWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-// 🔥 Firebase Config const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyBFRzWWY0iTPnPtmT_io6NNmxvmE9SZPwE",
   authDomain: "digibazar-48743.firebaseapp.com",
   projectId: "digibazar-48743",
@@ -55,89 +28,28 @@ import {
   messagingSenderId: "295224613021",
   appId: "1:295224613021:web:4c1b41da57cb240c165c74"
 };
-  authDomain: "digibazar-48743.firebaseapp.com",
-  projectId: "digibazar-48743",
-  storageBucket: "digibazar-48743.appspot.com",
-  messagingSenderId: "295224613021",
-  appId: "YOUR_APP_ID"
-};
 
-// INIT
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 const auth = getAuth(app);
 
-let currentUser = null;
-
-// 🔐 REGISTER
 window.register = function(){
-  let email = document.getElementById("email").value;
-  let password = document.getElementById("password").value;
 
-  createUserWithEmailAndPassword(auth, email, password)
-  .then((user)=>{
-    currentUser = user.user;
-    document.getElementById("status").innerText = "Register Success ✔";
-  })
-  .catch(e=>{
-    document.getElementById("status").innerText = e.message;
-  });
+let email = document.getElementById("email").value;
+let password = document.getElementById("password").value;
+
+createUserWithEmailAndPassword(auth, email, password)
+
+.then(()=>{
+document.getElementById("msg").innerText = "Register Success ✔";
+})
+
+.catch((e)=>{
+document.getElementById("msg").innerText = e.message;
+});
+
 }
-
-// 🔐 LOGIN
-window.login = function(){
-  let email = document.getElementById("email").value;
-  let password = document.getElementById("password").value;
-
-  signInWithEmailAndPassword(auth, email, password)
-  .then((user)=>{
-    currentUser = user.user;
-    document.getElementById("status").innerText = "Login Success ✔";
-  })
-  .catch(e=>{
-    document.getElementById("status").innerText = e.message;
-  });
-}
-
-// 🛒 ADD PRODUCT
-window.addProduct = async function(){
-  let name = document.getElementById("name").value;
-  let price = document.getElementById("price").value;
-
-  await addDoc(collection(db,"products"),{
-    name,
-    price
-  });
-
-  alert("Product Added ✔");
-  loadProducts();
-}
-
-// 🛍️ SHOW PRODUCTS
-async function loadProducts(){
-  const snap = await getDocs(collection(db,"products"));
-
-  let html = "";
-
-  snap.forEach(doc=>{
-    let d = doc.data();
-
-    html += `
-      <div style="border:1px solid #ddd; padding:10px; margin:10px; border-radius:10px;">
-        <h3>🛍️ ${d.name}</h3>
-        <p>💰 ${d.price}</p>
-      </div>
-    `;
-  });
-
-  document.getElementById("productList").innerHTML = html;
-}
-
-loadProducts();
 
 </script>
 
 </body>
 </html>
-window.register = function()
-window.login = function()
