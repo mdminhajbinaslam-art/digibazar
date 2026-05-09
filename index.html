@@ -1,12 +1,12 @@
-<!DOCTYPE html>
+<!<!DOCTYPE html>
 <html>
 <head>
-  <title>DigiBazar Marketplace</title>
+  <title>DigiBazar</title>
 </head>
 
 <body>
 
-<h1>🛒 DigiBazar</h1>
+<h1>🛒 DigiBazar Marketplace</h1>
 
 <!-- 🔐 AUTH -->
 <div id="auth">
@@ -31,6 +31,10 @@
 <button onclick="logout()">Logout</button>
 
 <hr>
+
+<!-- 🔍 SEARCH -->
+<input id="search" placeholder="Search product..." onkeyup="loadProducts()">
+<br><br>
 
 <h3>➕ Add Product</h3>
 
@@ -133,7 +137,7 @@ document.getElementById("auth").style.display="block";
 document.getElementById("shop").style.display="none";
 }
 
-// ➕ ADD PRODUCT (IMAGE)
+// ➕ ADD PRODUCT
 window.addProduct = async function(){
 
 let name = document.getElementById("name").value;
@@ -158,15 +162,23 @@ loadProducts();
 
 }
 
-// 📦 LOAD PRODUCTS
+// 📦 LOAD + SEARCH + FILTER
 window.loadProducts = async function(){
 
 const snap = await getDocs(collection(db,"products"));
 
-let html="";
+let searchValue = document.getElementById("search")?.value || "";
+searchValue = searchValue.toLowerCase();
+
+let html = "";
 
 snap.forEach(doc=>{
 let d = doc.data();
+
+let name = d.name.toLowerCase();
+let category = d.category.toLowerCase();
+
+if(name.includes(searchValue) || category.includes(searchValue)){
 
 html += `
 <div style="border:1px solid #ccc;padding:10px;margin:10px;">
@@ -181,6 +193,9 @@ html += `
 
 </div>
 `;
+
+}
+
 });
 
 document.getElementById("productList").innerHTML = html;
@@ -193,7 +208,7 @@ cart.push({name,price});
 alert("Added to cart ✔");
 }
 
-// 💰 PLACE ORDER
+// 💰 ORDER
 window.placeOrder = async function(){
 
 for(let item of cart){
@@ -207,7 +222,6 @@ email:auth.currentUser.email
 }
 
 alert("Order placed ✔");
-
 cart = [];
 
 }
