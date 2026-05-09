@@ -1,0 +1,11 @@
+window.addProduct = async function(){
+  const name = document.getElementById("name").value;
+  const price = document.getElementById("price").value;
+
+  await addDoc(collection(db,"products"),{
+    name,
+    price
+  });
+
+  alert("Product Added ✔");
+}

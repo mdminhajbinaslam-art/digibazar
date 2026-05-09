@@ -1,0 +1,21 @@
+window.loadProducts = async function(){
+  const snap = await getDocs(collection(db,"products"));
+
+  let html = "";
+
+  snap.forEach(doc=>{
+    const d = doc.data();
+
+    html += `
+      <div style="border:1px solid #ccc; padding:10px; margin:10px;">
+        <h3>${d.name}</h3>
+        <p>💰 ${d.price}</p>
+      </div>
+    `;
+  });
+
+  document.getElementById("list").innerHTML = html;
+}
+
+loadProducts();
+</script>

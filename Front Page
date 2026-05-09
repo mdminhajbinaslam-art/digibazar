@@ -1,0 +1,20 @@
+<h1>🛒 DigiBazar V2 Marketplace</h1>
+
+<h3>Login / Register</h3>
+<input id="email" placeholder="Email">
+<input id="pass" type="password" placeholder="Password">
+
+<button onclick="register()">Register</button>
+<button onclick="login()">Login</button>
+
+<hr>
+
+<h3>Add Product</h3>
+<input id="name" placeholder="Product Name">
+<input id="price" placeholder="Price">
+<button onclick="addProduct()">Post Product</button>
+
+<hr>
+
+<h3>Products</h3>
+<div id="list"></div>
