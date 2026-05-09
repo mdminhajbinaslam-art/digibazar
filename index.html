@@ -1,17 +1,17 @@
-<!<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
-  <title>DigiBazar</title>
+  <title>DigiBazar Fixed</title>
 </head>
 
 <body>
 
-<h1>🛒 DigiBazar Marketplace</h1>
+<h1>🛒 DigiBazar</h1>
 
-<!-- 🔐 AUTH SECTION -->
+<!-- AUTH -->
 <div id="auth">
 
-<h2>Register / Login</h2>
+<h2>Login / Register</h2>
 
 <input id="email" placeholder="Email"><br><br>
 <input id="password" type="password" placeholder="Password"><br><br>
@@ -23,10 +23,10 @@
 
 </div>
 
-<!-- 🛒 SHOP SECTION -->
+<!-- SHOP -->
 <div id="shop" style="display:none;">
 
-<h2>🛍️ Welcome To DigiBazar</h2>
+<h2>🛍️ Shop Area</h2>
 
 <button onclick="logout()">Logout</button>
 
@@ -34,15 +34,15 @@
 
 <h3>➕ Add Product</h3>
 
-<input id="pname" placeholder="Product Name"><br><br>
-<input id="pprice" placeholder="Price"><br><br>
+<input id="name" placeholder="Product Name"><br><br>
+<input id="price" placeholder="Price"><br><br>
+<input type="file" id="image"><br><br>
 
-<button onclick="addProduct()">Add Product</button>
+<button onclick="addProduct()">Post Product</button>
 
 <hr>
 
 <h3>📦 Products</h3>
-
 <div id="productList"></div>
 
 </div>
@@ -65,7 +65,7 @@ addDoc,
 getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// 🔥 Firebase Config
+// CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyBFRzWWY0iTPnPtmT_io6NNmxvmE9SZPwE",
   authDomain: "digibazar-48743.firebaseapp.com",
@@ -75,98 +75,73 @@ const firebaseConfig = {
   appId: "1:295224613021:web:4c1b41da57cb240c165c74"
 };
 
-// INIT
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 🔐 REGISTER
+// REGISTER
 window.register = function(){
 
-let email = document.getElementById("email").value;
-let password = document.getElementById("password").value;
+let email = emailInput();
+let password = passInput();
 
-createUserWithEmailAndPassword(auth, email, password)
-
+createUserWithEmailAndPassword(auth,email,password)
 .then(()=>{
-
-document.getElementById("msg").innerText = "Register Success ✔";
-document.getElementById("auth").style.display = "none";
-document.getElementById("shop").style.display = "block";
-
-loadProducts();
-
+showShop();
 })
-
-.catch(e=>{
-document.getElementById("msg").innerText = e.message;
-});
+.catch(e=>alert(e.message));
 
 }
 
-// 🔐 LOGIN
+// LOGIN
 window.login = function(){
 
-let email = document.getElementById("email").value;
-let password = document.getElementById("password").value;
+let email = emailInput();
+let password = passInput();
 
-signInWithEmailAndPassword(auth, email, password)
-
+signInWithEmailAndPassword(auth,email,password)
 .then(()=>{
-
-document.getElementById("msg").innerText = "Login Success ✔";
-document.getElementById("auth").style.display = "none";
-document.getElementById("shop").style.display = "block";
-
+showShop();
 loadProducts();
-
 })
-
-.catch(e=>{
-document.getElementById("msg").innerText = e.message;
-});
+.catch(e=>alert(e.message));
 
 }
 
-// 🚪 LOGOUT
+// LOGOUT
 window.logout = function(){
-
-signOut(auth).then(()=>{
-
-document.getElementById("auth").style.display = "block";
-document.getElementById("shop").style.display = "none";
-
-});
-
+signOut(auth);
+document.getElementById("auth").style.display="block";
+document.getElementById("shop").style.display="none";
 }
 
-// ➕ ADD PRODUCT
+// ADD PRODUCT
 window.addProduct = async function(){
 
-let name = document.getElementById("pname").value;
-let price = document.getElementById("pprice").value;
+let name = document.getElementById("name").value;
+let price = document.getElementById("price").value;
 
 await addDoc(collection(db,"products"),{
-name,
-price
+name:name,
+price:price
 });
 
 loadProducts();
 
 }
 
-// 📦 LOAD PRODUCTS
+// LOAD PRODUCTS
 window.loadProducts = async function(){
 
 const snap = await getDocs(collection(db,"products"));
 
-let html = "";
+let html="";
 
 snap.forEach(doc=>{
 let d = doc.data();
 
 html += `
-<div style="border:1px solid #ccc; padding:10px; margin:10px;">
+<div style="border:1px solid #ccc;padding:10px;margin:10px;">
 🛍️ ${d.name} <br>
 💰 ${d.price}
 </div>
@@ -176,6 +151,20 @@ html += `
 
 document.getElementById("productList").innerHTML = html;
 
+}
+
+// HELPERS
+function emailInput(){
+return document.getElementById("email").value;
+}
+
+function passInput(){
+return document.getElementById("password").value;
+}
+
+function showShop(){
+document.getElementById("auth").style.display="none";
+document.getElementById("shop").style.display="block";
 }
 
 </script>
