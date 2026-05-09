@@ -83,3 +83,37 @@ function showProducts(){
 // load
 showProducts();
 showCart();
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+function addToCart(name, price){
+  cart.push({name, price: Number(price)});
+  localStorage.setItem("cart", JSON.stringify(cart));
+  showCart();
+}
+
+function removeItem(index){
+  cart.splice(index, 1);
+  localStorage.setItem("cart", JSON.stringify(cart));
+  showCart();
+}
+
+function showCart(){
+  let cartList = document.getElementById("cartList");
+  let total = 0;
+
+  cartList.innerHTML = "";
+
+  cart.forEach((item, index) => {
+    total += item.price;
+
+    cartList.innerHTML += `
+      <div style="border:1px solid gray; padding:10px; margin:5px;">
+        <h4>${item.name}</h4>
+        <p>৳ ${item.price}</p>
+        <button onclick="removeItem(${index})">❌ Remove</button>
+      </div>
+    `;
+  });
+
+  document.getElementById("totalPrice").innerText = "Total: ৳" + total;
+}
