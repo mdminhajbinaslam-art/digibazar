@@ -1,4 +1,4 @@
-<!<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
   <title>DigiBazar</title>
@@ -53,6 +53,15 @@
 <hr>
 
 <h3>🛒 Cart</h3>
+
+<select id="paymentMethod">
+  <option value="cod">Cash on Delivery</option>
+  <option value="bkash">bKash</option>
+  <option value="nagad">Nagad</option>
+</select>
+
+<br><br>
+
 <button onclick="placeOrder()">Place Order</button>
 
 </div>
@@ -103,10 +112,7 @@ let cart = [];
 // 🔐 REGISTER
 window.register = function(){
 
-let email = emailInput();
-let password = passInput();
-
-createUserWithEmailAndPassword(auth,email,password)
+createUserWithEmailAndPassword(auth,emailInput(),passInput())
 .then(()=>{
 openShop();
 loadProducts();
@@ -118,10 +124,7 @@ loadProducts();
 // 🔐 LOGIN
 window.login = function(){
 
-let email = emailInput();
-let password = passInput();
-
-signInWithEmailAndPassword(auth,email,password)
+signInWithEmailAndPassword(auth,emailInput(),passInput())
 .then(()=>{
 openShop();
 loadProducts();
@@ -155,30 +158,27 @@ await addDoc(collection(db,"products"),{
 name,
 price,
 category,
-image: imgUrl
+image:imgUrl
 });
 
 loadProducts();
 
 }
 
-// 📦 LOAD + SEARCH + FILTER
+// 📦 PRODUCTS + SEARCH
 window.loadProducts = async function(){
 
 const snap = await getDocs(collection(db,"products"));
 
-let searchValue = document.getElementById("search")?.value || "";
-searchValue = searchValue.toLowerCase();
+let search = document.getElementById("search")?.value || "";
+search = search.toLowerCase();
 
 let html = "";
 
 snap.forEach(doc=>{
 let d = doc.data();
 
-let name = d.name.toLowerCase();
-let category = d.category.toLowerCase();
-
-if(name.includes(searchValue) || category.includes(searchValue)){
+if(d.name.toLowerCase().includes(search) || d.category.toLowerCase().includes(search)){
 
 html += `
 <div style="border:1px solid #ccc;padding:10px;margin:10px;">
@@ -205,23 +205,28 @@ document.getElementById("productList").innerHTML = html;
 // 🛒 CART
 window.addToCart = function(name,price){
 cart.push({name,price});
-alert("Added to cart ✔");
+alert("Added ✔");
 }
 
-// 💰 ORDER
+// 💳 ORDER + PAYMENT
 window.placeOrder = async function(){
+
+let method = document.getElementById("paymentMethod").value;
 
 for(let item of cart){
 
 await addDoc(collection(db,"orders"),{
 product:item.name,
 price:item.price,
-email:auth.currentUser.email
+payment:method,
+email:auth.currentUser.email,
+status:"Pending"
 });
 
 }
 
-alert("Order placed ✔");
+alert("Order placed ✔ Payment: "+method);
+
 cart = [];
 
 }
