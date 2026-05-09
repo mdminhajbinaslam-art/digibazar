@@ -1,0 +1,38 @@
+let products = JSON.parse(localStorage.getItem("products")) || [];
+
+function addProduct(){
+  let name = document.getElementById("name").value;
+  let price = document.getElementById("price").value;
+
+  let product = {
+    name: name,
+    price: price
+  };
+
+  products.push(product);
+  localStorage.setItem("products", JSON.stringify(products));
+
+  showProducts();
+}
+
+function showProducts(){
+  let list = document.getElementById("productList");
+  list.innerHTML = "";
+
+  products.forEach((p, index) => {
+    list.innerHTML += `
+      <div style="border:1px solid gray; padding:10px; margin:5px;">
+        <h3>${p.name}</h3>
+        <p>৳ ${p.price}</p>
+        <button onclick="buy()">কিনুন</button>
+      </div>
+    `;
+  });
+}
+
+function buy(){
+  alert("পণ্য কার্টে যোগ হয়েছে 👍");
+}
+
+// page load হলে দেখাবে
+showProducts();

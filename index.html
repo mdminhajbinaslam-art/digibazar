@@ -142,9 +142,7 @@ DigiBazar 🛒
 function buy(){
 alert("আপনি পণ্য কিনতে চান 👍");
 }
-
 </script>
-
 </body>
 </html>
 let cart = 0;
@@ -153,3 +151,12 @@ function buy(){
   cart++;
   alert("পণ্য কার্টে যোগ হয়েছে 👍 মোট: " + cart);
 }
+<h2>Seller Product Add</h2>
+
+<input type="text" id="name" placeholder="Product Name">
+<input type="number" id="price" placeholder="Price">
+<button onclick="addProduct()">Add Product</button>
+
+<hr>
+
+<div id="productList"></div>
