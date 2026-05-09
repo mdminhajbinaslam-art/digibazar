@@ -1,115 +1,4 @@
-<!<!DOCTYPE html>
-<html>
-<head>
-  <title>DigiBazar</title>
-</head>
-
-<body>
-
-<h1>🛒 DigiBazar Marketplace</h1>
-
-<!-- 🔐 LOGIN SECTION -->
-<h2>Login / Register</h2>
-
-<input id="email" placeholder="Email"><br><br>
-<input id="password" type="password" placeholder="Password"><br><br>
-
-<button onclick="register()">Register</button>
-<button onclick="login()">Login</button>
-
-<p id="status"></p>
-
-<hr>
-
-<!-- 🛒 PRODUCT ADD -->
-<h2>Add Product</h2>
-
-<input id="name" placeholder="Product Name"><br><br>
-<input id="price" placeholder="Price"><br><br>
-
-<button onclick="addProduct()">Add Product</button>
-
-<hr>
-
-<!-- 🛍️ PRODUCT LIST -->
-<h2>Products</h2>
-<div id="productList"></div>
-
-<!-- 🚀 FIREBASE SCRIPT -->
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { 
-  getFirestore, collection, addDoc, getDocs 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-import { 
-  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-// 🔥 YOUR FIREBASE CONFIG
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "digibazar-48743.firebaseapp.com",
-  projectId: "digibazar-48743",
-  storageBucket: "digibazar-48743.appspot.com",
-  messagingSenderId: "295224613021",
-  appId: "YOUR_APP_ID"
-};
-
-// INIT
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-
-let currentUser = null;
-
-// 🔐 REGISTER
-window.register = function(){
-  let email = document.getElementById("email").value;
-  let password = document.getElementById("password").value;
-
-  createUserWithEmailAndPassword(auth, email, password)
-  .then((userCredential)=>{
-    currentUser = userCredential.user;
-    document.getElementById("status").innerText = "Register Success ✔";
-  })
-  .catch(e=>{
-    document.getElementById("status").innerText = e.message;
-  });
-}
-
-// 🔐 LOGIN
-window.login = function(){
-  let email = document.getElementById("email").value;
-  let password = document.getElementById("password").value;
-
-  signInWithEmailAndPassword(auth, email, password)
-  .then((userCredential)=>{
-    currentUser = userCredential.user;
-    document.getElementById("status").innerText = "Login Success ✔";
-  })
-  .catch(e=>{
-    document.getElementById("status").innerText = e.message;
-  });
-}
-
-// 🛒 ADD PRODUCT
-window.addProduct = async function(){
-  let name = document.getElementById("name").value;
-  let price = document.getElementById("price").value;
-
-  await addDoc(collection(db,"products"),{
-    name,
-    price
-  });
-
-  alert("Product Added ✔");
-  loadProducts();
-}
-
-// 🛍️ SHOW PRODUCTS
-async function loadProducts(){
+ loadProducts(){
   const snap = await getDocs(collection(db,"products"));
 
   let html = "";
@@ -118,21 +7,20 @@ async function loadProducts(){
     let d = doc.data();
 
     html += `
-      <div style="border:1px solid #ccc; padding:10px; margin:10px;">
-        <h3>${d.name}</h3>
-        <p>💰 ${d.price}</p>
+      <div style="
+        border:1px solid #ddd;
+        padding:12px;
+        margin:10px;
+        border-radius:10px;
+        background:#f9f9f9;
+        width:200px;
+        display:inline-block;
+      ">
+        <h3>🛍️ ${d.name}</h3>
+        <p>💰 Price: ${d.price}</p>
       </div>
     `;
   });
 
   document.getElementById("productList").innerHTML = html;
 }
-
-loadProducts();
-
-</script>
-
-</body>
-</html>
-apiKey: "YOUR_API_KEY",
-appId: "YOUR_APP_ID"
