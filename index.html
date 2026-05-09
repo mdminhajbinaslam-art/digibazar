@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!<!DOCTYPE html>
 <html>
 <head>
   <title>DigiBazar</title>
@@ -8,42 +8,42 @@
 
 <h1>🛒 DigiBazar Marketplace</h1>
 
-<!-- LOGIN -->
+<!-- 🔐 AUTH SECTION -->
+<div id="auth">
+
 <h2>Register / Login</h2>
 
 <input id="email" placeholder="Email"><br><br>
-
 <input id="password" type="password" placeholder="Password"><br><br>
 
 <button onclick="register()">Register</button>
+<button onclick="login()">Login</button>
 
 <p id="msg"></p>
 
-<!-- SHOP -->
+</div>
+
+<!-- 🛒 SHOP SECTION -->
 <div id="shop" style="display:none;">
 
 <h2>🛍️ Welcome To DigiBazar</h2>
 
-<p>আপনি সফলভাবে ভিতরে ঢুকেছেন ✔</p>
+<button onclick="logout()">Logout</button>
 
 <hr>
 
-<h3>Products</h3>
+<h3>➕ Add Product</h3>
 
-<div style="border:1px solid #ccc; padding:10px; margin:10px;">
-  🛒 T-Shirt <br>
-  💰 500 টাকা
-</div>
+<input id="pname" placeholder="Product Name"><br><br>
+<input id="pprice" placeholder="Price"><br><br>
 
-<div style="border:1px solid #ccc; padding:10px; margin:10px;">
-  🛒 Shoes <br>
-  💰 1200 টাকা
-</div>
+<button onclick="addProduct()">Add Product</button>
 
-<div style="border:1px solid #ccc; padding:10px; margin:10px;">
-  🛒 Watch <br>
-  💰 900 টাকা
-</div>
+<hr>
+
+<h3>📦 Products</h3>
+
+<div id="productList"></div>
 
 </div>
 
@@ -52,11 +52,20 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
 import {
-  getAuth,
-  createUserWithEmailAndPassword
+getAuth,
+createUserWithEmailAndPassword,
+signInWithEmailAndPassword,
+signOut
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-// FIREBASE CONFIG
+import {
+getFirestore,
+collection,
+addDoc,
+getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// 🔥 Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyBFRzWWY0iTPnPtmT_io6NNmxvmE9SZPwE",
   authDomain: "digibazar-48743.firebaseapp.com",
@@ -68,34 +77,104 @@ const firebaseConfig = {
 
 // INIT
 const app = initializeApp(firebaseConfig);
-
 const auth = getAuth(app);
+const db = getFirestore(app);
 
-// REGISTER
+// 🔐 REGISTER
 window.register = function(){
 
 let email = document.getElementById("email").value;
-
 let password = document.getElementById("password").value;
 
 createUserWithEmailAndPassword(auth, email, password)
 
 .then(()=>{
 
-document.getElementById("msg").innerText =
-"Register Success ✔";
+document.getElementById("msg").innerText = "Register Success ✔";
+document.getElementById("auth").style.display = "none";
+document.getElementById("shop").style.display = "block";
 
-document.getElementById("shop").style.display =
-"block";
+loadProducts();
 
 })
 
-.catch((e)=>{
+.catch(e=>{
+document.getElementById("msg").innerText = e.message;
+});
 
-document.getElementById("msg").innerText =
-e.message;
+}
+
+// 🔐 LOGIN
+window.login = function(){
+
+let email = document.getElementById("email").value;
+let password = document.getElementById("password").value;
+
+signInWithEmailAndPassword(auth, email, password)
+
+.then(()=>{
+
+document.getElementById("msg").innerText = "Login Success ✔";
+document.getElementById("auth").style.display = "none";
+document.getElementById("shop").style.display = "block";
+
+loadProducts();
+
+})
+
+.catch(e=>{
+document.getElementById("msg").innerText = e.message;
+});
+
+}
+
+// 🚪 LOGOUT
+window.logout = function(){
+
+signOut(auth).then(()=>{
+
+document.getElementById("auth").style.display = "block";
+document.getElementById("shop").style.display = "none";
 
 });
+
+}
+
+// ➕ ADD PRODUCT
+window.addProduct = async function(){
+
+let name = document.getElementById("pname").value;
+let price = document.getElementById("pprice").value;
+
+await addDoc(collection(db,"products"),{
+name,
+price
+});
+
+loadProducts();
+
+}
+
+// 📦 LOAD PRODUCTS
+window.loadProducts = async function(){
+
+const snap = await getDocs(collection(db,"products"));
+
+let html = "";
+
+snap.forEach(doc=>{
+let d = doc.data();
+
+html += `
+<div style="border:1px solid #ccc; padding:10px; margin:10px;">
+🛍️ ${d.name} <br>
+💰 ${d.price}
+</div>
+`;
+
+});
+
+document.getElementById("productList").innerHTML = html;
 
 }
 
