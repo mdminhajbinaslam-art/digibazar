@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DigiBazar Pro Marketplace</title>
+<title>DigiBazar Fixed System</title>
 
 <style>
 
@@ -11,12 +11,12 @@ body{
 font-family:Arial;
 background:#f5f5f5;
 padding:15px;
-padding-bottom:120px;
+padding-bottom:100px;
 }
 
 h1,h2,h3{color:#222;}
 
-input,select,button{
+input,button,select{
 width:100%;
 padding:10px;
 margin:5px 0;
@@ -41,25 +41,13 @@ box-shadow:0 2px 5px rgba(0,0,0,0.1);
 
 img{max-width:120px;border-radius:8px;}
 
-#bottomMenu{
-position:fixed;
-bottom:0;
-left:0;
-width:100%;
-background:white;
-display:flex;
-justify-content:space-around;
-padding:10px;
-box-shadow:0 -2px 10px rgba(0,0,0,0.1);
-}
-
 </style>
 
 </head>
 
 <body>
 
-<h1>🏪 DigiBazar Pro (Alibaba Level)</h1>
+<h1>🏪 DigiBazar</h1>
 
 <!-- AUTH -->
 
@@ -83,88 +71,8 @@ box-shadow:0 -2px 10px rgba(0,0,0,0.1);
 
 <hr>
 
-<h3>📂 Category Filter</h3>
-
-<select id="filterCategory" onchange="loadProducts()">
-<option value="">All</option>
-<option>Electronics</option>
-<option>Fashion</option>
-<option>Books</option>
-</select>
-
-<hr>
-
-<h3>➕ Add Product (Seller)</h3>
-
-<input id="name" placeholder="Product Name">
-<input id="price" placeholder="Price">
-<input id="category" placeholder="Category">
-<input type="file" id="image">
-
-<button onclick="addProduct()">Post Product</button>
-
-<hr>
-
 <h3>📦 Products</h3>
 <div id="productList"></div>
-
-<hr>
-
-<h3>🛒 Order + Payment System</h3>
-
-<select id="paymentMethod">
-<option value="COD">Cash On Delivery</option>
-<option value="BKASH">bKash</option>
-<option value="NAGAD">Nagad</option>
-</select>
-
-<button onclick="placeOrder()">Place Order</button>
-
-<div id="orderList"></div>
-
-<hr>
-
-<h3>❤️ Wishlist</h3>
-<div id="wishlist"></div>
-
-<hr>
-
-<h3>💬 Chat System</h3>
-
-<input id="chatMessage" placeholder="Message">
-<button onclick="sendMessage()">Send</button>
-
-<div id="chatList"></div>
-
-<hr>
-
-<h3>👨‍💼 Seller Dashboard</h3>
-
-<button onclick="loadMyProducts()">My Products</button>
-<div id="myProducts"></div>
-
-<hr>
-
-<h3>💳 PAYMENT REDIRECT (REAL SYSTEM READY)</h3>
-
-<div class="card">
-
-<p>After placing order you will be redirected to payment gateway.</p>
-
-<button onclick="fakePayment()">Test Payment Flow</button>
-
-</div>
-
-</div>
-
-<!-- BOTTOM MENU -->
-
-<div id="bottomMenu">
-
-<button onclick="shop.style.display='block'">🏠</button>
-<button onclick="alert('Orders')">📦</button>
-<button onclick="alert('Wishlist')">❤️</button>
-<button onclick="alert('Chat')">💬</button>
 
 </div>
 
@@ -176,181 +84,117 @@ import {
 getAuth,
 createUserWithEmailAndPassword,
 signInWithEmailAndPassword,
-signOut
+signOut,
+onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 import {
 getFirestore,
 collection,
-addDoc,
-getDocs,
-doc,
-updateDoc
+getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-import {
-getStorage,
-ref,
-uploadBytes,
-getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-
-// CONFIG
 
 const firebaseConfig = {
 apiKey:"AIzaSyBFRzWWY0iTPnPtmT_io6NNmxvmE9SZPwE",
 authDomain:"digibazar-48743.firebaseapp.com",
-projectId:"digibazar-48743",
-storageBucket:"digibazar-48743.firebasestorage.app",
-appId:"1:295224613021:web:4c1b41da57cb240c165c74"
+projectId:"digibazar-48743"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
-const ADMIN_EMAIL = "mdminhajbinaslam@gmail.com";
+/* ======================
+AUTH FIX (MAIN PART)
+====================== */
 
-/* AUTH */
+window.register = async function(){
 
-window.register = () =>
-createUserWithEmailAndPassword(auth,email.value,password.value)
-.then(()=>openShop());
+try{
 
-window.login = () =>
-signInWithEmailAndPassword(auth,email.value,password.value)
-.then(()=>openShop());
+await createUserWithEmailAndPassword(
+auth,
+email.value,
+password.value
+);
 
-window.logout = () => signOut(auth);
+}catch(e){
+alert(e.message);
+}
 
-/* PRODUCT */
+};
 
-window.addProduct = async ()=>{
+window.login = async function(){
 
-let file = image.files[0];
-let imgRef = ref(storage,"products/"+file.name);
+try{
 
-await uploadBytes(imgRef,file);
-let url = await getDownloadURL(imgRef);
+await signInWithEmailAndPassword(
+auth,
+email.value,
+password.value
+);
 
-await addDoc(collection(db,"products"),{
-name:name.value,
-price:price.value,
-category:category.value,
-image:url,
-seller:auth.currentUser.email
-});
+}catch(e){
+alert(e.message);
+}
+
+};
+
+window.logout = function(){
+signOut(auth);
+};
+
+/* ======================
+AUTO LOGIN FIX (IMPORTANT)
+====================== */
+
+onAuthStateChanged(auth,(user)=>{
+
+if(user){
+
+document.getElementById("auth").style.display="none";
+document.getElementById("shop").style.display="block";
 
 loadProducts();
 
-};
+}else{
 
-/* LOAD PRODUCTS */
+document.getElementById("auth").style.display="block";
+document.getElementById("shop").style.display="none";
 
-window.loadProducts = async ()=>{
-
-let snap = await getDocs(collection(db,"products"));
-let html="";
-
-snap.forEach(d=>{
-
-let x=d.data();
-
-html += `
-<div class="card">
-
-<img src="${x.image}"><br>
-
-${x.name}<br>
-${x.price}<br>
-${x.category}<br>
-
-<button onclick="addWish('${x.name}','${x.price}','${x.image}')">
-❤️
-</button>
-
-</div>
-`;
+}
 
 });
 
-productList.innerHTML = html;
-};
+/* ======================
+PRODUCT LOAD
+====================== */
 
-/* ORDER SYSTEM (REAL STRUCTURE) */
-
-window.placeOrder = async ()=>{
-
-await addDoc(collection(db,"orders"),{
-buyer:auth.currentUser.email,
-product:"Sample",
-price:"N/A",
-payment:paymentMethod.value,
-status:"PENDING_PAYMENT"
-});
-
-alert("Order Created → Redirecting to Payment Gateway (Mock)");
-
-};
-
-/* FAKE PAYMENT FLOW (REAL SYSTEM TEMPLATE) */
-
-window.fakePayment = ()=>{
-
-alert("Redirecting to bKash/Nagad Gateway (Backend Required)");
-
-window.location.href =
-"https://your-payment-gateway.com/pay";
-
-};
-
-/* SELLER */
-
-window.loadMyProducts = async ()=>{
+window.loadProducts = async function(){
 
 let snap = await getDocs(collection(db,"products"));
 
-let html="";
+let html = "";
 
 snap.forEach(d=>{
 
-let x=d.data();
-
-if(x.seller === auth.currentUser.email){
+let x = d.data();
 
 html += `
 <div class="card">
 
 ${x.name}<br>
 ${x.price}<br>
+${x.category}
 
 </div>
 `;
 
-}
-
 });
 
-myProducts.innerHTML = html;
-};
-
-/* CHAT */
-
-window.sendMessage = async ()=>{
-
-await addDoc(collection(db,"chat"),{
-msg:chatMessage.value,
-email:auth.currentUser.email
-});
+document.getElementById("productList").innerHTML = html;
 
 };
-
-function openShop(){
-auth.style.display="none";
-shop.style.display="block";
-loadProducts();
-}
 
 </script>
 
