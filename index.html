@@ -1,25 +1,62 @@
 <!DOCTYPE html>
 <html>
+<head>
+  <title>DigiBazar</title>
+</head>
+
 <body>
 
-<h2>Firebase Login Test</h2>
+<h1>🛒 DigiBazar Marketplace</h1>
+
+<!-- LOGIN -->
+<h2>Register / Login</h2>
 
 <input id="email" placeholder="Email"><br><br>
+
 <input id="password" type="password" placeholder="Password"><br><br>
 
 <button onclick="register()">Register</button>
 
 <p id="msg"></p>
 
+<!-- SHOP -->
+<div id="shop" style="display:none;">
+
+<h2>🛍️ Welcome To DigiBazar</h2>
+
+<p>আপনি সফলভাবে ভিতরে ঢুকেছেন ✔</p>
+
+<hr>
+
+<h3>Products</h3>
+
+<div style="border:1px solid #ccc; padding:10px; margin:10px;">
+  🛒 T-Shirt <br>
+  💰 500 টাকা
+</div>
+
+<div style="border:1px solid #ccc; padding:10px; margin:10px;">
+  🛒 Shoes <br>
+  💰 1200 টাকা
+</div>
+
+<div style="border:1px solid #ccc; padding:10px; margin:10px;">
+  🛒 Watch <br>
+  💰 900 টাকা
+</div>
+
+</div>
+
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
 import {
-getAuth,
-createUserWithEmailAndPassword
+  getAuth,
+  createUserWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
+// FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyBFRzWWY0iTPnPtmT_io6NNmxvmE9SZPwE",
   authDomain: "digibazar-48743.firebaseapp.com",
@@ -29,22 +66,35 @@ const firebaseConfig = {
   appId: "1:295224613021:web:4c1b41da57cb240c165c74"
 };
 
+// INIT
 const app = initializeApp(firebaseConfig);
+
 const auth = getAuth(app);
 
+// REGISTER
 window.register = function(){
 
 let email = document.getElementById("email").value;
+
 let password = document.getElementById("password").value;
 
 createUserWithEmailAndPassword(auth, email, password)
 
 .then(()=>{
-document.getElementById("msg").innerText = "Register Success ✔";
+
+document.getElementById("msg").innerText =
+"Register Success ✔";
+
+document.getElementById("shop").style.display =
+"block";
+
 })
 
 .catch((e)=>{
-document.getElementById("msg").innerText = e.message;
+
+document.getElementById("msg").innerText =
+e.message;
+
 });
 
 }
