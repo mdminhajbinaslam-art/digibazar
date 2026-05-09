@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>DigiBazar Full System</title>
+  <title>DigiBazar Full Marketplace</title>
 </head>
 
 <body>
 
-<h1>🛒 DigiBazar Marketplace</h1>
+<h1>🛒 DigiBazar Multi-Vendor Marketplace</h1>
 
 <!-- 🔐 AUTH -->
 <div id="auth">
@@ -66,6 +66,13 @@
 
 <h3>📦 Orders (Admin Panel)</h3>
 <div id="orderList"></div>
+
+<hr>
+
+<h3>👨‍💼 Seller Dashboard</h3>
+
+<button onclick="loadMyProducts()">My Products</button>
+<div id="myProducts"></div>
 
 </div>
 
@@ -146,7 +153,7 @@ document.getElementById("auth").style.display="block";
 document.getElementById("shop").style.display="none";
 }
 
-// ➕ ADD PRODUCT
+// ➕ ADD PRODUCT (SELLER)
 window.addProduct = async function(){
 
 let name = document.getElementById("name").value;
@@ -164,7 +171,8 @@ await addDoc(collection(db,"products"),{
 name,
 price,
 category,
-image:imgUrl
+image: imgUrl,
+seller: auth.currentUser.email
 });
 
 loadProducts();
@@ -191,7 +199,8 @@ html += `
 <img src="${d.image}" width="120"><br>
 🛍️ ${d.name}<br>
 📂 ${d.category}<br>
-💰 ${d.price}<br><br>
+💰 ${d.price}<br>
+👨‍💼 Seller: ${d.seller}<br><br>
 
 <button onclick="addToCart('${d.name}','${d.price}')">
 🛒 Add to Cart
@@ -214,7 +223,7 @@ cart.push({name,price});
 alert("Added ✔");
 }
 
-// 💳 PLACE ORDER
+// 💳 ORDER + PAYMENT
 window.placeOrder = async function(){
 
 let method = document.getElementById("paymentMethod").value;
@@ -238,7 +247,7 @@ loadOrders();
 
 }
 
-// 📦 LOAD ORDERS (STATUS SYSTEM)
+// 📦 ORDER STATUS
 window.loadOrders = async function(){
 
 const snap = await getDocs(collection(db,"orders"));
@@ -277,6 +286,36 @@ status:status
 });
 
 loadOrders();
+
+}
+
+// 👨‍💼 SELLER DASHBOARD
+window.loadMyProducts = async function(){
+
+const snap = await getDocs(collection(db,"products"));
+
+let html = "";
+
+snap.forEach(doc=>{
+let d = doc.data();
+
+if(d.seller === auth.currentUser.email){
+
+html += `
+<div style="border:2px solid green;padding:10px;margin:10px;">
+<img src="${d.image}" width="120"><br>
+🛍️ ${d.name}<br>
+💰 ${d.price}<br>
+📂 ${d.category}<br>
+<b>My Product</b>
+</div>
+`;
+
+}
+
+});
+
+document.getElementById("myProducts").innerHTML = html;
 
 }
 
