@@ -519,7 +519,37 @@ price
 });  
   
 notify("Added To Cart ✔");  
-  
+  window.loadCart =window.addToCart = function(name,price){
+
+  cart.push({name,price});
+
+  loadCart(); // 🔥 এই লাইনটা নতুন যোগ
+  notify("Added To Cart ✔");
+
+} function(){
+  let html = "";
+
+  cart.forEach((item, index)=>{
+    html += `
+      <div class="card">
+        🛍️ ${item.name}<br>
+        💰 ${item.price}<br><br>
+
+        <button onclick="removeCart(${index})">
+          ❌ Remove
+        </button>
+      </div>
+    `;
+  });
+
+  document.getElementById("productList").innerHTML = html;
+}
+
+window.removeCart = function(index){
+  cart.splice(index,1);
+  loadCart();
+  notify("Removed from cart ❌");
+}
 }  
   
 // WISHLIST  
