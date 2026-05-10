@@ -1,315 +1,852 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DigiBazar Ultimate Marketplace</title>
-
-<style>
-body{
-font-family:Arial;
-background:#f5f5f5;
-margin:0;
-padding:15px;
-padding-bottom:100px;
-}
-
-h1,h2,h3{color:#222;}
-
-input,select,button{
-width:100%;
-padding:12px;
-margin:6px 0;
-border-radius:10px;
-border:1px solid #ccc;
-box-sizing:border-box;
-}
-
-button{
-background:#0d6efd;
-color:white;
-border:none;
-cursor:pointer;
-}
-
-.card{
-background:white;
-padding:15px;
-margin:10px 0;
-border-radius:12px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
-}
-
-img{
-border-radius:10px;
-max-width:100%;
-}
-
-.notify{
-background:#fff3cd;
-padding:10px;
-border-radius:10px;
-margin-bottom:10px;
-}
-
-.section{display:none;}
-
-#bottomMenu{
-position:fixed;
-bottom:0;
-left:0;
-width:100%;
-background:white;
-padding:10px;
-display:flex;
-justify-content:space-around;
-box-shadow:0 -2px 10px rgba(0,0,0,0.1);
-}
-
-#bottomMenu button{
-width:auto;
-padding:10px 15px;
-font-size:14px;
-}
-</style>
-
-</head>
-
-<body>
-
-<h1>🛒 DigiBazar Ultimate Marketplace</h1>
-
-<div id="notification"></div>
-
-<!-- LOGIN -->
-<div id="auth">
-<h2>Register / Login</h2>
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
-<button onclick="register()">Register</button>
-<button onclick="login()">Login</button>
-</div>
-
-<!-- SHOP -->
-<div id="shop" style="display:none;">
-
-<button onclick="logout()">Logout</button>
-
-<hr>
-
-<h3>📂 Category Filter</h3>
-<select id="filterCategory" onchange="loadProducts()">
-<option value="">All</option>
-<option value="Electronics">Electronics</option>
-<option value="Fashion">Fashion</option>
-<option value="Books">Books</option>
-</select>
-
-<div id="productSection" class="section">
-
-<input id="search" placeholder="Search..." onkeyup="loadProducts()">
-
-<h3>➕ Add Product</h3>
-<input id="name" placeholder="Product Name">
-<input id="price" placeholder="Price">
-<input id="category" placeholder="Category">
-<input type="file" id="image">
-
-<button onclick="addProduct()">Post Product</button>
-
-<hr>
-
-<h3>📦 Products</h3>
-<div id="productList"></div>
-
-<hr>
-
-<h3>🛒 Cart + Payment</h3>
-<select id="paymentMethod">
-<option value="cod">Cash On Delivery</option>
-<option value="bkash">bKash</option>
-<option value="nagad">Nagad</option>
-</select>
-
-<button onclick="placeOrder()">Place Order</button>
-
-<hr>
-
-<h3>❤️ Wishlist</h3>
-<div id="wishlist"></div>
-
-<hr>
-
-<h3>📊 Analytics</h3>
-<div class="card">Products: <span id="totalProducts">0</span></div>
-<div class="card">Orders: <span id="totalOrders">0</span></div>
-
-</div>
-
-<div id="orderSection" class="section">
-<div id="orderList"></div>
-</div>
-
-<div id="chatSection" class="section">
-<div id="chatList"></div>
-</div>
-
-</div>
-
-<!-- MENU -->
-<div id="bottomMenu">
-<button onclick="showSection('productSection')">Home</button>
-<button onclick="showSection('orderSection')">Orders</button>
-<button onclick="showSection('chatSection')">Chat</button>
-</div>
-
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-
-const app = initializeApp({
-apiKey:"AIzaSyBFRzWWY0iTPnPtmT_io6NNmxvmE9SZPwE",
-authDomain:"digibazar-48743.firebaseapp.com",
-projectId:"digibazar-48743",
-storageBucket:"digibazar-48743.firebasestorage.app"
-});
-
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
-
-let cart=[];
-let wishlist=[];
-
-// SWITCH
-window.showSection=(id)=>{
-["productSection","orderSection","chatSection"].forEach(x=>{
-document.getElementById(x).style.display="none";
-});
-document.getElementById(id).style.display="block";
-}
-
-// NOTIFY
-function notify(t){
-document.getElementById("notification").innerHTML=`<div class="notify">${t}</div>`;
-setTimeout(()=>document.getElementById("notification").innerHTML="",3000);
-}
-
-// REGISTER
-window.register=()=>{
-createUserWithEmailAndPassword(auth,email.value,password.value)
-.then(()=>{
-openShop();
-loadProducts();
-loadAnalytics();
-notify("Registration Success ✔");
-})
-.catch(e=>alert(e.message));
-}
-
-// LOGIN
-window.login=()=>{
-signInWithEmailAndPassword(auth,email.value,password.value)
-.then(()=>{
-openShop();
-loadProducts();
-loadAnalytics();
-notify("Login Success ✔");
-})
-.catch(e=>alert(e.message));
-}
-
-// LOGOUT
-window.logout=()=>{
-signOut(auth);
-auth.style.display="block";
-shop.style.display="none";
-}
-
-// ADD PRODUCT (FIXED SAFE VERSION)
-window.addProduct=async()=>{
-
-let imgUrl="https://via.placeholder.com/150";
-
-if(image.files[0]){
-let file=image.files[0];
-let r=ref(storage,"products/"+file.name);
-await uploadBytes(r,file);
-imgUrl=await getDownloadURL(r);
-}
-
-await addDoc(collection(db,"products"),{
-name:name.value,
-price:price.value,
-category:category.value,
-image:imgUrl,
-seller:auth.currentUser.email,
-rating:0
-});
-
-notify("Product Added ✔");
-loadProducts();
-loadAnalytics();
-}
-
-// LOAD PRODUCTS
-window.loadProducts=async()=>{
-
-let snap=await getDocs(collection(db,"products"));
-let searchVal=(search.value||"").toLowerCase();
-let cat=filterCategory.value;
-
-let html="";
-
-snap.forEach(d=>{
-let x=d.data();
-
-if(cat && x.category!==cat) return;
-
-if(
-x.name.toLowerCase().includes(searchVal) ||
-x.category.toLowerCase().includes(searchVal)
-){
-
-html+=`
-<div class="card">
-
-<img src="${x.image}" width="120"><br><br>
-
-🛍️ ${x.name}<br>
-📂 ${x.category}<br>
-💰 ${x.price}<br>
-👨‍💼 ${x.seller}<br>
-
-</div>
-`;
-}
-
-});
-
-productList.innerHTML=html;
-}
-
-// PLACE ORDER
-window.placeOrder=async()=>{
-notify("Order Placed ✔");
-}
-
-// ANALYTICS
-window.loadAnalytics=async()=>{
-let p=await getDocs(collection(db,"products"));
-totalProducts.innerText=p.size;
-}
-
-function openShop(){
-auth.style.display="none";
-shop.style.display="block";
-}
-
-</script>
-
-</body>
+DOCTYPE html>
+
+<html lang="en">  <head>  <meta charset="UTF-8">  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <title>DigiBazar Ultimate Marketplace</title>  <style>  
+  
+body{  
+font-family:Arial;  
+background:#f5f5f5;  
+margin:0;  
+padding:15px;  
+padding-bottom:100px;  
+}  
+  
+h1,h2,h3{  
+color:#222;  
+}  
+  
+input,  
+select,  
+button{  
+width:100%;  
+padding:12px;  
+margin:6px 0;  
+border-radius:10px;  
+border:1px solid #ccc;  
+box-sizing:border-box;  
+}  
+  
+button{  
+background:#0d6efd;  
+color:white;  
+border:none;  
+cursor:pointer;  
+}  
+  
+.card{  
+background:white;  
+padding:15px;  
+margin:10px 0;  
+border-radius:12px;  
+box-shadow:0 2px 6px rgba(0,0,0,0.1);  
+}  
+  
+img{  
+border-radius:10px;  
+max-width:100%;  
+}  
+  
+.notify{  
+background:#fff3cd;  
+padding:10px;  
+border-radius:10px;  
+margin-bottom:10px;  
+}  
+  
+.section{  
+display:none;  
+}  
+  
+#bottomMenu{  
+position:fixed;  
+bottom:0;  
+left:0;  
+width:100%;  
+background:white;  
+padding:10px;  
+display:flex;  
+justify-content:space-around;  
+box-shadow:0 -2px 10px rgba(0,0,0,0.1);  
+}  
+  
+#bottomMenu button{  
+width:auto;  
+padding:10px 15px;  
+font-size:14px;  
+}  
+  
+</style>  </head>  <body>  <h1>🛒 DigiBazar Ultimate Marketplace</h1>  <!-- NOTIFICATION -->  <div id="notification"></div>  <!-- LOGIN REGISTER -->  <div id="auth">  <h2>Register / Login</h2>  <input id="email" placeholder="Email">  <input id="password" type="password" placeholder="Password">  <button onclick="register()">  
+Register  
+</button>  <button onclick="login()">  
+Login  
+</button>  </div>  <!-- MAIN SHOP -->  <div id="shop" style="display:none;">  <button onclick="logout()">  
+Logout  
+</button>  <hr>  <!-- CATEGORY FILTER -->  <h3>📂 Filter By Category</h3>  <select id="filterCategory"  
+onchange="loadProducts()">
+
+<option value="">  
+All Categories  
+</option>  <option value="Electronics">  
+Electronics  
+</option>  <option value="Fashion">  
+Fashion  
+</option>  <option value="Books">  
+Books  
+</option>  </select>  <!-- HOME SECTION -->  <div id="productSection" class="section">  <input id="search"  
+placeholder="Search product..."  
+onkeyup="loadProducts()">
+
+<hr>  <h3>➕ Add Product</h3>  <input id="name"  
+placeholder="Product Name">
+
+<input id="price"  
+placeholder="Price">
+
+<input id="category"  
+placeholder="Category">
+
+<input type="file" id="image">  <button onclick="addProduct()">  
+Post Product  
+</button>  <hr>  <h3>📦 Products</h3>  <div id="productList"></div>  <hr>  <h3>🛒 Cart + Payment</h3>  <select id="paymentMethod">  <option value="cod">  
+Cash On Delivery  
+</option>  <option value="bkash">  
+bKash  
+</option>  <option value="nagad">  
+Nagad  
+</option>  </select>  <button onclick="placeOrder()">  
+Place Order  
+</button>  <hr>  <h3>👨‍💼 Seller Dashboard</h3>  <button onclick="loadMyProducts()">  
+My Products  
+</button>  <div id="myProducts"></div>  <hr>  <h3>📊 Analytics</h3>  <div class="card">  
+📦 Total Products:  
+<span id="totalProducts">0</span>  
+</div>  <div class="card">  
+📦 Total Orders:  
+<span id="totalOrders">0</span>  
+</div>  <div class="card">  
+❤️ Wishlist Items:  
+<span id="totalWishlist">0</span>  
+</div>  </div>  <!-- ORDER SECTION -->  <div id="orderSection"  
+class="section">  <h3>📦 Orders</h3>  <div id="orderList"></div>  </div>  <!-- WISHLIST SECTION -->  <div id="wishlistSection"  
+class="section">  <h3>❤️ Wishlist</h3>  <div id="wishlist"></div>  </div>  <!-- CHAT SECTION -->  <div id="chatSection"  
+class="section">  <h3>💬 Buyer Seller Chat</h3>  <input id="chatMessage"  
+placeholder="Type message">
+
+<button onclick="sendMessage()">  
+Send  
+</button>  <div id="chatList"></div>  </div>  </div>  <!-- BOTTOM MENU -->  <div id="bottomMenu">  <button onclick="showSection('productSection')">  
+🏠 Home  
+</button>  <button onclick="showSection('orderSection')">  
+📦 Orders  
+</button>  <button onclick="showSection('wishlistSection')">  
+❤️ Wishlist  
+</button>  <button onclick="showSection('chatSection')">  
+💬 Chat  
+</button>  </div>  <script type="module">  
+  
+import { initializeApp }  
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";  
+  
+import {  
+getAuth,  
+createUserWithEmailAndPassword,  
+signInWithEmailAndPassword,  
+signOut  
+}  
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";  
+  
+import {  
+getFirestore,  
+collection,  
+addDoc,  
+getDocs,  
+doc,  
+updateDoc  
+}  
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";  
+  
+import {  
+getStorage,  
+ref,  
+uploadBytes,  
+getDownloadURL  
+}  
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";  
+  
+// FIREBASE CONFIG  
+  
+const firebaseConfig = {  
+  
+apiKey:  
+"AIzaSyBFRzWWY0iTPnPtmT_io6NNmxvmE9SZPwE",  
+  
+authDomain:  
+"digibazar-48743.firebaseapp.com",  
+  
+projectId:  
+"digibazar-48743",  
+  
+storageBucket:  
+"digibazar-48743.firebasestorage.app",  
+  
+messagingSenderId:  
+"295224613021",  
+  
+appId:  
+"1:295224613021:web:4c1b41da57cb240c165c74"  
+  
+};  
+  
+// INIT  
+  
+const app = initializeApp(firebaseConfig);  
+  
+const auth = getAuth(app);  
+  
+const db = getFirestore(app);  
+  
+const storage = getStorage(app);  
+  
+let cart = [];  
+  
+let wishlist = [];  
+  
+// SECTION SWITCH  
+  
+window.showSection = function(id){  
+  
+document.getElementById(  
+"productSection"  
+).style.display="none";  
+  
+document.getElementById(  
+"orderSection"  
+).style.display="none";  
+  
+document.getElementById(  
+"wishlistSection"  
+).style.display="none";  
+  
+document.getElementById(  
+"chatSection"  
+).style.display="none";  
+  
+document.getElementById(id)  
+.style.display="block";  
+  
+}  
+  
+// NOTIFY  
+  
+function notify(text){  
+  
+document.getElementById(  
+"notification"  
+).innerHTML = `  
+  
+<div class="notify">  
+${text}  
+</div>  
+  
+`;  
+  
+setTimeout(()=>{  
+  
+document.getElementById(  
+"notification"  
+).innerHTML = "";  
+  
+},3000);  
+  
+}  
+  
+// REGISTER  
+  
+window.register = function(){  
+  
+createUserWithEmailAndPassword(  
+auth,  
+emailInput(),  
+passInput()  
+)  
+  
+.then(()=>{  
+  
+openShop();  
+  
+loadProducts();  
+  
+loadOrders();  
+  
+loadMessages();  
+  
+loadAnalytics();  
+  
+showSection("productSection");  
+  
+notify("Registration Success ✔");  
+  
+})  
+  
+.catch(e=>alert(e.message));  
+  
+}  
+  
+// LOGIN  
+  
+window.login = function(){  
+  
+signInWithEmailAndPassword(  
+auth,  
+emailInput(),  
+passInput()  
+)  
+  
+.then(()=>{  
+  
+openShop();  
+  
+loadProducts();  
+  
+loadOrders();  
+  
+loadMessages();  
+  
+loadAnalytics();  
+  
+showSection("productSection");  
+  
+notify("Login Success ✔");  
+  
+})  
+  
+.catch(e=>alert(e.message));  
+  
+}  
+  
+// LOGOUT  
+  
+window.logout = function(){  
+  
+signOut(auth);  
+  
+document.getElementById(  
+"auth"  
+).style.display="block";  
+  
+document.getElementById(  
+"shop"  
+).style.display="none";  
+  
+notify("Logout Success ✔");  
+  
+}  
+  
+// ADD PRODUCT  
+  
+window.addProduct =  
+async function(){  
+  
+let name =  
+document.getElementById(  
+"name"  
+).value;  
+  
+let price =  
+document.getElementById(  
+"price"  
+).value;  
+  
+let category =  
+document.getElementById(  
+"category"  
+).value;  
+  
+let file =  
+document.getElementById(  
+"image"  
+).files[0];  
+  
+let imgRef =  
+ref(storage,  
+"products/"+file.name);  
+  
+await uploadBytes(  
+imgRef,  
+file  
+);  
+  
+let imgUrl =  
+await getDownloadURL(imgRef);  
+  
+await addDoc(  
+collection(db,"products"),  
+{  
+  
+name,  
+price,  
+category,  
+image:imgUrl,  
+seller:auth.currentUser.email,  
+rating:0  
+  
+});  
+  
+notify("Product Added ✔");  
+  
+loadProducts();  
+  
+loadAnalytics();  
+  
+}  
+  
+// LOAD PRODUCTS  
+  
+window.loadProducts =  
+async function(){  
+  
+const snap =  
+await getDocs(  
+collection(db,"products")  
+);  
+  
+let search =  
+document.getElementById(  
+"search"  
+).value.toLowerCase();  
+  
+let selectedCategory =  
+document.getElementById(  
+"filterCategory"  
+).value;  
+  
+let html = "";  
+  
+snap.forEach(docItem=>{  
+  
+let d =  
+docItem.data();  
+  
+if(  
+selectedCategory &&  
+d.category !== selectedCategory  
+){  
+return;  
+}  
+  
+if(  
+d.name.toLowerCase()  
+.includes(search)  
+||  
+d.category.toLowerCase()  
+.includes(search)  
+){  
+  
+html += `  
+  
+<div class="card">  
+  
+<img src="${d.image}"  
+width="120"><br><br>  
+  
+🛍️ ${d.name}<br>  
+📂 ${d.category}<br>  
+💰 ${d.price}<br>  
+⭐ ${d.rating}<br>  
+👨‍💼 ${d.seller}<br><br>  
+  
+<button onclick="addToCart(  
+'${d.name}',  
+'${d.price}'  
+)">  
+🛒 Add To Cart  
+</button>  
+  
+<button onclick="rateProduct(  
+'${docItem.id}',  
+5  
+)">  
+⭐ Give 5 Star  
+</button>  
+  
+<button onclick="addToWishlist(  
+'${d.name}',  
+'${d.price}',  
+'${d.image}'  
+)">  
+❤️ Wishlist  
+</button>  
+  
+</div>  
+  
+`;  
+  
+}  
+  
+});  
+  
+document.getElementById(  
+"productList"  
+).innerHTML = html;  
+  
+}  
+  
+// RATE PRODUCT  
+  
+window.rateProduct =  
+async function(id,rating){  
+  
+await updateDoc(  
+doc(db,"products",id),  
+{  
+rating:rating  
+}  
+);  
+  
+notify("Thanks For Rating ⭐");  
+  
+loadProducts();  
+  
+}  
+  
+// CART  
+  
+window.addToCart =  
+function(name,price){  
+  
+cart.push({  
+name,  
+price  
+});  
+  
+notify("Added To Cart ✔");  
+  
+}  
+  
+// WISHLIST  
+  
+window.addToWishlist =  
+function(name,price,image){  
+  
+wishlist.push({  
+name,  
+price,  
+image  
+});  
+  
+loadWishlist();  
+  
+loadAnalytics();  
+  
+notify("Added To Wishlist ❤️");  
+  
+}  
+  
+window.loadWishlist =  
+function(){  
+  
+let html = "";  
+  
+wishlist.forEach(item=>{  
+  
+html += `  
+  
+<div class="card">  
+  
+<img src="${item.image}"  
+width="120"><br><br>  
+  
+🛍️ ${item.name}<br>  
+💰 ${item.price}  
+  
+</div>  
+  
+`;  
+  
+});  
+  
+document.getElementById(  
+"wishlist"  
+).innerHTML = html;  
+  
+}  
+  
+// PLACE ORDER  
+  
+window.placeOrder =  
+async function(){  
+  
+let method =  
+document.getElementById(  
+"paymentMethod"  
+).value;  
+  
+for(let item of cart){  
+  
+await addDoc(  
+collection(db,"orders"),  
+{  
+  
+product:item.name,  
+price:item.price,  
+payment:method,  
+email:auth.currentUser.email,  
+status:"Pending"  
+  
+});  
+  
+}  
+  
+cart = [];  
+  
+notify("Order Placed ✔");  
+  
+loadOrders();  
+  
+loadAnalytics();  
+  
+}  
+  
+// LOAD ORDERS  
+  
+window.loadOrders =  
+async function(){  
+  
+const snap =  
+await getDocs(  
+collection(db,"orders")  
+);  
+  
+let html = "";  
+  
+snap.forEach(d=>{  
+  
+let data =  
+d.data();  
+  
+html += `  
+  
+<div class="card">  
+  
+🛍️ ${data.product}<br>  
+💰 ${data.price}<br>  
+💳 ${data.payment}<br>  
+📧 ${data.email}<br>  
+📦 ${data.status}<br><br>  
+  
+<button onclick="updateStatus(  
+'${d.id}',  
+'Processing'  
+)">  
+Processing  
+</button>  
+  
+<button onclick="updateStatus(  
+'${d.id}',  
+'Delivered'  
+)">  
+Delivered  
+</button>  
+  
+</div>  
+  
+`;  
+  
+});  
+  
+document.getElementById(  
+"orderList"  
+).innerHTML = html;  
+  
+}  
+  
+// UPDATE STATUS  
+  
+window.updateStatus =  
+async function(id,status){  
+  
+await updateDoc(  
+doc(db,"orders",id),  
+{  
+status:status  
+}  
+);  
+  
+notify("Order Updated ✔");  
+  
+loadOrders();  
+  
+}  
+  
+// SELLER DASHBOARD  
+  
+window.loadMyProducts =  
+async function(){  
+  
+const snap =  
+await getDocs(  
+collection(db,"products")  
+);  
+  
+let html = "";  
+  
+snap.forEach(docItem=>{  
+  
+let d =  
+docItem.data();  
+  
+if(  
+d.seller ===  
+auth.currentUser.email  
+){  
+  
+html += `  
+  
+<div class="card">  
+  
+<img src="${d.image}"  
+width="120"><br><br>  
+  
+🛍️ ${d.name}<br>  
+💰 ${d.price}<br>  
+📂 ${d.category}<br>  
+⭐ ${d.rating}<br>  
+  
+<b>My Product</b>  
+  
+</div>  
+  
+`;  
+  
+}  
+  
+});  
+  
+document.getElementById(  
+"myProducts"  
+).innerHTML = html;  
+  
+}  
+  
+// CHAT  
+  
+window.sendMessage =  
+async function(){  
+  
+let msg =  
+document.getElementById(  
+"chatMessage"  
+).value;  
+  
+await addDoc(  
+collection(db,"messages"),  
+{  
+  
+message:msg,  
+email:auth.currentUser.email  
+  
+});  
+  
+notify("Message Sent ✔");  
+  
+loadMessages();  
+  
+}  
+  
+window.loadMessages =  
+async function(){  
+  
+const snap =  
+await getDocs(  
+collection(db,"messages")  
+);  
+  
+let html = "";  
+  
+snap.forEach(docItem=>{  
+  
+let d =  
+docItem.data();  
+  
+html += `  
+  
+<div class="card">  
+  
+📧 ${d.email}<br>  
+💬 ${d.message}  
+  
+</div>  
+  
+`;  
+  
+});  
+  
+document.getElementById(  
+"chatList"  
+).innerHTML = html;  
+  
+}  
+  
+// ANALYTICS  
+  
+window.loadAnalytics =  
+async function(){  
+  
+const productSnap =  
+await getDocs(  
+collection(db,"products")  
+);  
+  
+const orderSnap =  
+await getDocs(  
+collection(db,"orders")  
+);  
+  
+document.getElementById(  
+"totalProducts"  
+).innerText =  
+productSnap.size;  
+  
+document.getElementById(  
+"totalOrders"  
+).innerText =  
+orderSnap.size;  
+  
+document.getElementById(  
+"totalWishlist"  
+).innerText =  
+wishlist.length;  
+  
+}  
+  
+// HELPERS  
+  
+function emailInput(){  
+  
+return document.getElementById(  
+"email"  
+).value;  
+  
+}  
+  
+function passInput(){  
+  
+return document.getElementById(  
+"password"  
+).value;  
+  
+}  
+  
+function openShop(){  
+  
+document.getElementById(  
+"auth"  
+).style.display="none";  
+  
+document.getElementById(  
+"shop"  
+).style.display="block";  
+  
+}  
+  
+</script>  </body>  
 </html>

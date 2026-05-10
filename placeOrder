@@ -1,0 +1,36 @@
+window.placeOrder = async function () {
+  if (!auth.currentUser) {
+    alert("Please login first");
+    return;
+  }
+
+  if (cart.length === 0) {
+    alert("Cart is empty");
+    return;
+  }
+
+  let method = document.getElementById("paymentMethod").value;
+
+  try {
+    for (let item of cart) {
+      await addDoc(collection(db, "orders"), {
+        product: item.name,
+        price: item.price,
+        payment: method,
+        email: auth.currentUser.email,
+        status: "Pending",
+        time: new Date()
+      });
+    }
+
+    cart = [];
+    notify("Order Placed Successfully ✔");
+
+    loadOrders();
+    loadAnalytics();
+
+  } catch (err) {
+    console.log(err);
+    alert("Order failed!");
+  }
+};
